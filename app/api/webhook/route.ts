@@ -1,12 +1,8 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import { postToTwitter } from "@/lib/platforms/twitter";
-import { postToLinkedIn } from "@/lib/platforms/linkedin";
-import { postToReddit } from "@/lib/platforms/reddit";
-import { postToMedium } from "@/lib/platforms/medium";
 import { postToDevTo } from "@/lib/platforms/devto";
 import { postToTumblr } from "@/lib/platforms/tumblr";
 import { postToBlogger } from "@/lib/platforms/blogger";
-import { postToHashnode } from "@/lib/platforms/hashnode";
+import { generateArticleContent } from "@/lib/platforms/ai-content";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +40,15 @@ export async function GET(req: NextRequest) {
     if (!pendingPosts || pendingPosts.length === 0) continue;
 
     const post = pendingPosts[0];
+
+    // Generate AI content
+    let articleContent = post.excerpt || post.title;
+    try {
+      articleContent = await generateArticleContent(post.title, post.url, post.excerpt || undefined);
+    } catch (e) {
+      articleContent = `Read about "${post.title}" - ${post.excerpt || post.title}. Visit ${post.url} for more details.`;
+    }
+
     const platformResults: Record<string, any> = {};
     let allSuccess = true;
 
@@ -51,51 +56,12 @@ export async function GET(req: NextRequest) {
       try {
         let result;
         switch (platform) {
-          case "twitter":
-            result = await postToTwitter(
-              {
-                apiKey: process.env.TWITTER_API_KEY || "",
-                apiSecret: process.env.TWITTER_API_SECRET || "",
-                accessToken: process.env.TWITTER_ACCESS_TOKEN || "",
-                accessSecret: process.env.TWITTER_ACCESS_SECRET || "",
-              },
-              post.title,
-              post.url
-            );
-            break;
-          case "linkedin":
-            result = await postToLinkedIn(
-              { accessToken: process.env.LINKEDIN_ACCESS_TOKEN || "" },
-              post.title,
-              post.url,
-              post.excerpt || undefined
-            );
-            break;
-          case "reddit":
-            result = await postToReddit(
-              {
-                clientId: process.env.REDDIT_CLIENT_ID || "",
-                clientSecret: process.env.REDDIT_CLIENT_SECRET || "",
-                username: process.env.REDDIT_USERNAME || "",
-              },
-              post.title,
-              post.url
-            );
-            break;
-          case "medium":
-            result = await postToMedium(
-              { accessToken: process.env.MEDIUM_ACCESS_TOKEN || "" },
-              post.title,
-              post.url,
-              post.excerpt || undefined
-            );
-            break;
           case "devto":
             result = await postToDevTo(
               { apiKey: process.env.DEVTO_API_KEY || "" },
               post.title,
               post.url,
-              post.excerpt || undefined
+              articleContent
             );
             break;
           case "blogger":
@@ -108,7 +74,7 @@ export async function GET(req: NextRequest) {
               },
               post.title,
               post.url,
-              post.excerpt || undefined
+              articleContent
             );
             break;
           case "tumblr":
@@ -121,15 +87,7 @@ export async function GET(req: NextRequest) {
               },
               post.title,
               post.url,
-              post.excerpt || undefined
-            );
-            break;
-          case "hashnode":
-            result = await postToHashnode(
-              { apiKey: process.env.HASHNODE_API_KEY || "" },
-              post.title,
-              post.url,
-              post.excerpt || undefined
+              articleContent
             );
             break;
           default:

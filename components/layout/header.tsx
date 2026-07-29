@@ -28,6 +28,7 @@ export function Header() {
           variant="ghost"
           size="icon"
           onClick={handleLogout}
+          title="Log out"
           aria-label="Log out"
           className="text-cyber-text-muted hover:text-cyber-red"
         >

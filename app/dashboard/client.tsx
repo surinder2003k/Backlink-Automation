@@ -1,22 +1,12 @@
 "use client";
 
 import { StatsCards } from "@/components/dashboard/stats-cards";
-import { ActivityLog } from "@/components/dashboard/activity-log";
-
-interface Activity {
-  id: string;
-  title: string;
-  platforms: string[];
-  status: string;
-  created_at: string;
-}
 
 interface DashboardClientProps {
   totalPosts: number;
   scheduled: number;
   successRate: number;
   recentCount: number;
-  activities: Activity[];
 }
 
 export function DashboardClient({
@@ -24,7 +14,6 @@ export function DashboardClient({
   scheduled,
   successRate,
   recentCount,
-  activities,
 }: DashboardClientProps) {
   return (
     <div className="space-y-6">
@@ -43,8 +32,6 @@ export function DashboardClient({
         successRate={successRate}
         recentCount={recentCount}
       />
-
-      <ActivityLog activities={activities} />
     </div>
   );
 }

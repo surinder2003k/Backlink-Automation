@@ -53,6 +53,7 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
   const [statusFilter, setStatusFilter] = useState("all");
   const [internalPostingId, setInternalPostingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   const postingId = externalPostingId || internalPostingId;
 
@@ -144,7 +145,8 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
                   {filtered.map((post) => (
                     <tr
                       key={post.id}
-                      className="border-b border-cyber-border/50 hover:bg-cyber-card-hover/50 transition-colors"
+                      onClick={() => setSelectedPost(post)}
+                      className="border-b border-cyber-border/50 hover:bg-cyber-card-hover/50 transition-colors cursor-pointer"
                     >
                       <td className="py-3 pr-4">
                         <div className="min-w-0 max-w-[250px]">
@@ -212,8 +214,9 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handlePostNow(post.id)}
+                            onClick={(e) => { e.stopPropagation(); handlePostNow(post.id); }}
                             disabled={postingId === post.id}
+                            title="Post Now"
                             className="text-cyber-cyan hover:text-cyber-cyan"
                           >
                             {postingId === post.id ? (
@@ -225,7 +228,8 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setConfirmDelete(post.id)}
+                            onClick={(e) => { e.stopPropagation(); setConfirmDelete(post.id); }}
+                            title="Delete"
                             className="text-cyber-text-muted hover:text-cyber-red"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -272,6 +276,64 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
               Delete
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!selectedPost}
+        onOpenChange={() => setSelectedPost(null)}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{selectedPost?.title}</DialogTitle>
+            <DialogDescription>Post details and platform results</DialogDescription>
+          </DialogHeader>
+          {selectedPost && (
+            <div className="space-y-4">
+              <div>
+                <p className="font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider mb-1">Source URL</p>
+                <a
+                  href={selectedPost.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-cyber-cyan hover:underline break-all"
+                >
+                  {selectedPost.url}
+                </a>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider mb-2">Platforms</p>
+                <div className="space-y-2">
+                  {selectedPost.platforms.map((p) => {
+                    const result = selectedPost.platform_results?.[p];
+                    const postUrl = result?.url;
+                    return (
+                      <div key={p} className="flex items-center justify-between rounded-md border border-cyber-border/50 px-3 py-2">
+                        <span className={`font-mono text-xs uppercase ${platformColors[p] || "text-cyber-text-muted"}`}>
+                          {p}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-mono text-[10px] ${result?.status === "success" ? "text-green-400" : result?.status === "failed" ? "text-cyber-red" : "text-cyber-text-muted"}`}>
+                            {result?.status || "pending"}
+                          </span>
+                          {postUrl ? (
+                            <a
+                              href={postUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-cyber-cyan hover:underline"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>

@@ -15,15 +15,13 @@ export default async function DashboardPage() {
   const scheduled = posts?.filter((p) => p.status === "pending").length || 0;
   const published = posts?.filter((p) => p.status === "published").length || 0;
   const successRate = totalPosts > 0 ? Math.round((published / totalPosts) * 100) : 0;
-  const recentActivity = posts?.slice(0, 10) || [];
 
   return (
     <DashboardClient
       totalPosts={totalPosts}
       scheduled={scheduled}
       successRate={successRate}
-      recentCount={recentActivity.length}
-      activities={recentActivity}
+      recentCount={totalPosts}
     />
   );
 }

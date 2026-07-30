@@ -59,6 +59,8 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
   const [postingId, setPostingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 10;
 
   const scheduledPosts = posts.filter((p) => p.scheduled_at);
 
@@ -70,6 +72,10 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
       statusFilter === "all" || post.status === statusFilter;
     return matchSearch && matchStatus;
   });
+
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const resetPage = () => setPage(1);
 
   const now = new Date();
   const [processing, setProcessing] = useState(false);
@@ -135,11 +141,11 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
               <Input
                 placeholder="Search scheduled posts..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); resetPage(); }}
                 className="pl-9"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); resetPage(); }}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue />
               </SelectTrigger>
@@ -172,7 +178,7 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((post) => {
+                  {paginated.map((post) => {
                     const schedDate = new Date(post.scheduled_at!);
                     const isPast = schedDate < now;
                     return (
@@ -251,6 +257,18 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-cyber-border">
+              <p className="text-xs font-mono text-cyber-text-muted">
+                Showing {(page - 1) * PER_PAGE + 1}-{Math.min(page * PER_PAGE, filtered.length)} of {filtered.length}
+              </p>
+              <div className="flex gap-1">
+                <Button variant="secondary" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>Prev</Button>
+                <span className="flex items-center px-2 text-xs font-mono text-cyber-text-muted">{page}/{totalPages}</span>
+                <Button variant="secondary" size="sm" disabled={page === totalPages} onClick={() => setPage(page + 1)}>Next</Button>
+              </div>
             </div>
           )}
         </CardContent>

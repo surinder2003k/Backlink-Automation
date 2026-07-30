@@ -89,18 +89,19 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const newStatus = allSuccess ? "published" : "failed";
+  const successCount = Object.values(results).filter((r: any) => r.success).length;
+  const newStatus = successCount > 0 ? "published" : "failed";
 
   await supabase
     .from("posts")
     .update({
       status: newStatus,
       platform_results: results,
-      published_at: allSuccess ? new Date().toISOString() : null,
+      published_at: successCount > 0 ? new Date().toISOString() : null,
     })
     .eq("id", postId);
 
-  console.log(`[PostNow] Post ${postId}: ${newStatus}`, results);
+  console.log(`[PostNow] Post ${postId}: ${newStatus} (${successCount}/${Object.keys(results).length} platforms)`);
 
   return NextResponse.json({
     success: allSuccess,

@@ -87,12 +87,12 @@ export async function postToTumblr(
       body: new URLSearchParams(bodyParams).toString(),
     });
     const data = (await response.json()) as any;
-    if (!response.ok || data?.meta?.status !== 201) {
+    if (!response.ok) {
       throw new Error(data?.meta?.msg || `Tumblr API error: ${response.status}`);
     }
-    const postId = data?.response?.id;
-    const postUrl2 = `https://${blogName}.tumblr.com/post/${postId}`;
-    return { success: true, id: String(postId || "ok"), url: data?.response?.post_url || postUrl2 };
+    const postId = Array.isArray(data?.response) ? data.response[0] : data?.response?.id;
+    const constructedUrl = `https://${blogName}.tumblr.com/post/${postId}`;
+    return { success: true, id: String(postId || "ok"), url: data?.response?.post_url || constructedUrl };
   } catch (error: any) {
     console.error("Tumblr post error:", error.message);
     return { success: false, error: error.message };

@@ -90,14 +90,15 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const newStatus = allSuccess ? "published" : "failed";
+    const successCount = Object.values(platformResults).filter((r: any) => r.success).length;
+    const newStatus = successCount > 0 ? "published" : "failed";
 
     await supabase
       .from("posts")
       .update({
         status: newStatus,
         platform_results: platformResults,
-        published_at: allSuccess ? now.toISOString() : null,
+        published_at: successCount > 0 ? now.toISOString() : null,
       })
       .eq("id", post.id);
 

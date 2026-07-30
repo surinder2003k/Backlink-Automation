@@ -101,7 +101,7 @@ export function PostsClient({ posts }: PostsClientProps) {
       />
 
       <Dialog open={showNew} onOpenChange={setShowNew}>
-        <DialogContent>
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>New Post</DialogTitle>
             <DialogDescription>Create a new backlink post to publish across platforms</DialogDescription>

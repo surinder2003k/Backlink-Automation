@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Plus, Loader2 } from "lucide-react";
 
 interface Post {
@@ -211,10 +212,9 @@ export function PostsClient({ posts }: PostsClientProps) {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-mono text-cyber-text-muted">Schedule (optional)</label>
-              <Input
-                type="datetime-local"
+              <DateTimePicker
                 value={scheduleAt}
-                onChange={(e) => setScheduleAt(e.target.value)}
+                onChange={setScheduleAt}
                 min={new Date().toISOString().slice(0, 16)}
               />
               <p className="text-[10px] text-cyber-text-muted">Leave empty to post immediately</p>

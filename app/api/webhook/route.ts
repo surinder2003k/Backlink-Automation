@@ -1,4 +1,4 @@
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { postToDevTo } from "@/lib/platforms/devto";
 import { postToTumblr } from "@/lib/platforms/tumblr";
 import { postToBlogger } from "@/lib/platforms/blogger";
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = createServiceClient();
+  const supabase = createClient();
   const now = new Date();
 
   const { data: pendingPosts } = await supabase

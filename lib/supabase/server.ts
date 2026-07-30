@@ -9,13 +9,3 @@ export function createClient() {
     }
   );
 }
-
-export function createServiceClient() {
-  return createSupabaseClient(
-    process.env.XYLOS_SUPABASE_URL!,
-    process.env.XYLOS_SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: { autoRefreshToken: false, persistSession: false },
-    }
-  );
-}

@@ -45,8 +45,6 @@ interface ScheduleClientProps {
   posts: Post[];
 }
 
-const PLATFORM_TIMES: Record<string, number> = { devto: 3000, blogger: 4000, tumblr: 3000 };
-
 const platformColors: Record<string, string> = {
   devto: "text-purple-400",
   blogger: "text-yellow-400",

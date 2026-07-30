@@ -14,9 +14,3 @@ export function formatDate(date: string | Date) {
     minute: "2-digit",
   }).format(new Date(date));
 }
-
-export function maskKey(key: string) {
-  if (!key) return "";
-  if (key.length <= 8) return "••••••••";
-  return key.slice(0, 4) + "••••" + key.slice(-4);
-}

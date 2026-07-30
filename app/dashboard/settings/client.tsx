@@ -7,12 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Save, Loader2 } from "lucide-react";
 
-const PLATFORMS = [
-  { id: "devto", label: "Dev.to" },
-  { id: "blogger", label: "Blogger" },
-  { id: "tumblr", label: "Tumblr" },
-];
-
 interface SettingsData {
   devto_api_key?: string;
   blogger_client_id?: string;

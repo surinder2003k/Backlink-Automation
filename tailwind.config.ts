@@ -37,15 +37,6 @@ const config: Config = {
         "glass-lg":
           "0 0 0 1px rgba(59,73,75,0.2), 0 8px 40px rgba(0,0,0,0.4)",
       },
-      animation: {
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-      },
-      keyframes: {
-        "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 8px rgba(0,240,255,0.2)" },
-          "50%": { boxShadow: "0 0 20px rgba(0,240,255,0.4)" },
-        },
-      },
     },
   },
   plugins: [require("tailwindcss-animate")],

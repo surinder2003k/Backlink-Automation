@@ -1,48 +1,39 @@
 # Xylos Backlinks
 
-A full-stack Next.js 15 backlink automation dashboard with cyberpunk noir theme.
+Cyberpunk-themed backlink automation dashboard that posts to Dev.to, Blogger, and Tumblr with AI-generated content.
 
 ## Tech Stack
 
-- Next.js 15 (App Router)
-- Supabase (PostgreSQL)
-- Tailwind CSS + shadcn/ui
-- Node-cron (scheduled posting)
+- **Frontend:** Next.js 15, Tailwind CSS, Radix UI
+- **Database:** Supabase (PostgreSQL)
+- **AI Content:** OpenRouter API (Mistral 7B free tier) with local fallback
+- **Hosting:** Netlify
+- **Testing:** Playwright
 
-## Quick Start
+## Setup
 
-### 1. Apply Database Schema
+1. Clone the repo
+2. Copy `.env.example` to `.env.local` and fill in your keys
+3. Run the SQL from `supabase/schema.sql` in your Supabase dashboard
+4. `npm install && npm run dev`
 
-Go to the Supabase Dashboard SQL Editor and paste `supabase/schema.sql`, then run it.
+## Environment Variables
 
-### 2. Environment Variables
+See `.env.example` for the full list. Key variables:
 
-Copy `.env.example` to `.env.local` and fill in your values. See `VERCEL-ENV.txt` for all required variables.
-
-### 3. Install & Run
-
-```bash
-npm install
-npm run dev
-```
-
-Open `http://localhost:3000` and login with `sunny` / `3424`.
-
-## Deploy to Vercel
-
-1. Push to GitHub
-2. Import repo on [vercel.com/new](https://vercel.com/new)
-3. Add all environment variables from `.env.local`
-4. Deploy
+| Variable | Description |
+|----------|-------------|
+| `XYLOS_SUPABASE_URL` | Supabase project URL |
+| `XYLOS_SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
+| `DEVTO_API_KEY` | Dev.to API key |
+| `TUMBLR_*` | Tumblr OAuth credentials |
+| `BLOGGER_*` | Blogger OAuth credentials |
+| `OPENROUTER_API_KEY` | OpenRouter API key (optional, has local fallback) |
 
 ## Features
 
-- Cookie-based authentication
-- Dashboard with stats overview
-- Posts table with clickable platform result URLs
-- Posting progress bar with ETA
-- Schedule posting with time slots and platform selection
-- Manual "Post Now" button
-- Windows-style hover outlines
-- Cyberpunk Noir theme with glass-card panels
-- Active platforms: Dev.to, Blogger, Tumblr
+- Post to Dev.to, Blogger, Tumblr simultaneously
+- AI-generated 500+ word articles with backlinks
+- Schedule posts with calendar picker
+- Inline posting progress in table rows
+- Mobile responsive

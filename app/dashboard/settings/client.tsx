@@ -15,8 +15,6 @@ interface SettingsData {
   blogger_blog_id?: string;
   tumblr_consumer_key?: string;
   tumblr_consumer_secret?: string;
-  tumblr_access_token?: string;
-  tumblr_access_secret?: string;
   blog_url?: string;
 }
 
@@ -170,27 +168,6 @@ export function SettingsClient({ settings }: SettingsClientProps) {
                   type="password"
                   value={form.tumblr_consumer_secret || ""}
                   onChange={(e) => updateField("tumblr_consumer_secret", e.target.value)}
-                  placeholder="Enter secret"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-mono text-cyber-text-muted">
-                  Access Token
-                </label>
-                <Input
-                  value={form.tumblr_access_token || ""}
-                  onChange={(e) => updateField("tumblr_access_token", e.target.value)}
-                  placeholder="Enter token"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-mono text-cyber-text-muted">
-                  Access Secret
-                </label>
-                <Input
-                  type="password"
-                  value={form.tumblr_access_secret || ""}
-                  onChange={(e) => updateField("tumblr_access_secret", e.target.value)}
                   placeholder="Enter secret"
                 />
               </div>

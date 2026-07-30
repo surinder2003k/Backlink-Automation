@@ -69,8 +69,6 @@ export async function POST(req: NextRequest) {
             {
               consumerKey: process.env.TUMBLR_CONSUMER_KEY || "",
               consumerSecret: process.env.TUMBLR_CONSUMER_SECRET || "",
-              accessToken: process.env.TUMBLR_ACCESS_TOKEN || "",
-              accessSecret: process.env.TUMBLR_ACCESS_SECRET || "",
             },
             post.title,
             post.url,

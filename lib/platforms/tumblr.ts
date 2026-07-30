@@ -3,6 +3,8 @@ interface TumblrConfig {
   consumerSecret: string;
 }
 
+import { linksToHtml } from "./ai-content";
+
 async function getBearerToken(config: TumblrConfig): Promise<string> {
   const res = await fetch("https://api.tumblr.com/v2/oauth2/token", {
     method: "POST",
@@ -39,7 +41,7 @@ export async function postToTumblr(
     const blogName = userData.response.user.blogs[0].name;
 
     const postUrl = `https://api.tumblr.com/v2/blog/${blogName}/post`;
-    const htmlBody = `<p>${excerpt || title}</p><p><a href="${url}">Read more here</a></p>`;
+    const htmlBody = linksToHtml(`<p>${excerpt || title}</p><p><a href="${url}">Read more here</a></p>`);
     const body = new URLSearchParams({
       type: "text",
       title: title.slice(0, 250),

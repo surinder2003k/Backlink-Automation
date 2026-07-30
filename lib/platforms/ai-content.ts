@@ -43,6 +43,14 @@ function pickRandomLinks(urls: string[], exclude: string, count: number): string
   return shuffled.slice(0, count);
 }
 
+export function linksToMarkdown(text: string): string {
+  return text.replace(/(?<!\()(https?:\/\/[^\s,;)>]+)/g, "[$1]($1)");
+}
+
+export function linksToHtml(text: string): string {
+  return text.replace(/(?<!["\ href=])(https?:\/\/[^\s,;)<]+)/g, '<a href="$1">$1</a>');
+}
+
 function generateLocalArticle(title: string, url: string, excerpt?: string, extraLinks: string[] = []): string {
   const words = title.split(/\s+/);
   const keyword = words.slice(0, 3).join(" ").toLowerCase();

@@ -41,6 +41,7 @@ export function PostsClient({ posts }: PostsClientProps) {
   const [excerpt, setExcerpt] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [scheduleAt, setScheduleAt] = useState("");
+  const [postCount, setPostCount] = useState(1);
   const [saving, setSaving] = useState(false);
 
   const triggerPost = async (id: string, platforms: string[]) => {
@@ -67,23 +68,26 @@ export function PostsClient({ posts }: PostsClientProps) {
       scheduledISO = localDate.toISOString();
     }
 
-    const res = await fetch("/api/posts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, url, excerpt, platforms: selectedPlatforms, scheduled_at: scheduledISO }),
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setShowNew(false);
-      setTitle(""); setUrl(""); setExcerpt(""); setSelectedPlatforms([]); setScheduleAt("");
-      if (!scheduleAt) {
-        setSaving(false);
+    const count = Math.max(1, Math.min(10, postCount));
+
+    for (let i = 0; i < count; i++) {
+      const postTitle = count > 1 ? `${title} ${i + 1}` : title;
+      const res = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: postTitle, url, excerpt, platforms: selectedPlatforms, scheduled_at: scheduledISO }),
+      });
+
+      if (res.ok && !scheduledISO) {
+        const data = await res.json();
         await triggerPost(data.id, selectedPlatforms);
-        return;
       }
-      router.refresh();
     }
+
+    setShowNew(false);
+    setTitle(""); setUrl(""); setExcerpt(""); setSelectedPlatforms([]); setScheduleAt(""); setPostCount(1);
     setSaving(false);
+    router.refresh();
   };
 
   const togglePlatform = (p: string) => {
@@ -153,6 +157,18 @@ export function PostsClient({ posts }: PostsClientProps) {
                 })()}
               />
               <p className="text-[10px] text-cyber-text-muted">Leave empty to post immediately</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-mono text-cyber-text-muted">Number of Posts</label>
+              <Input
+                type="number"
+                min={1}
+                max={10}
+                value={postCount}
+                onChange={(e) => setPostCount(parseInt(e.target.value) || 1)}
+                className="w-24"
+              />
+              <p className="text-[10px] text-cyber-text-muted">How many posts to create (1-10)</p>
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => setShowNew(false)}>Cancel</Button>

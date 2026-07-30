@@ -2,6 +2,8 @@ interface DevToConfig {
   apiKey: string;
 }
 
+import { linksToMarkdown } from "./ai-content";
+
 export async function postToDevTo(
   config: DevToConfig,
   title: string,
@@ -9,6 +11,7 @@ export async function postToDevTo(
   excerpt?: string
 ) {
   try {
+    const bodyMarkdown = linksToMarkdown(excerpt || title);
     const response = await fetch("https://dev.to/api/articles", {
       method: "POST",
       headers: {
@@ -18,7 +21,7 @@ export async function postToDevTo(
       body: JSON.stringify({
         article: {
           title,
-          body_markdown: `${(excerpt || title).replace(new RegExp(url, "g"), `[Read the full article here](${url})`)}\n\n[Read more on our blog](${url})`,
+          body_markdown: `${bodyMarkdown}\n\n[Read more on our blog](${url})`,
           published: true,
           tags: ["backlink", "blog"],
         },

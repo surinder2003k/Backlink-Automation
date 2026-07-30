@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ const platformColors: Record<string, string> = {
 };
 
 export function ScheduleClient({ posts }: ScheduleClientProps) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [postingId, setPostingId] = useState<string | null>(null);
@@ -70,20 +72,28 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
   });
 
   const now = new Date();
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     const overdue = posts.filter(
       (p) => p.status === "pending" && p.scheduled_at && new Date(p.scheduled_at) <= new Date()
     );
-    if (overdue.length > 0) {
-      overdue.forEach(async (post) => {
-        await fetch("/api/post-now", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ postId: post.id }),
-        });
-      });
-      setTimeout(() => window.location.reload(), 3000);
+    if (overdue.length > 0 && !processing) {
+      setProcessing(true);
+      (async () => {
+        for (const post of overdue) {
+          try {
+            await fetch("/api/post-now", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ postId: post.id }),
+            });
+          } catch (e) {
+            console.error(`Failed to post ${post.id}`, e);
+          }
+        }
+        router.refresh();
+      })();
     }
   }, []);
 
@@ -109,6 +119,7 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
         <h2 className="text-2xl font-heading font-bold text-cyber-text">Schedule</h2>
         <p className="text-sm text-cyber-text-muted mt-1">
           Posts scheduled for future publishing ({scheduledPosts.length} total)
+          {processing && <span className="ml-2 text-cyber-cyan animate-pulse">Processing overdue posts...</span>}
         </p>
       </div>
 

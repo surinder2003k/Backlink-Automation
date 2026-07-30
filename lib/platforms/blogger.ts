@@ -5,6 +5,8 @@ interface BloggerConfig {
   blogId?: string;
 }
 
+import { linksToHtml } from "./ai-content";
+
 export async function postToBlogger(
   config: BloggerConfig,
   title: string,
@@ -55,7 +57,7 @@ export async function postToBlogger(
     }
 
     // Create blog post
-    const content = `${excerpt || title}\n\n<a href="${url}">Read more</a>`;
+    const content = linksToHtml(`${excerpt || title}\n\n<a href="${url}">Read more</a>`);
     const postRes = await fetch(
       `https://blogger.googleapis.com/v3/blogs/${blogId}/posts/`,
       {

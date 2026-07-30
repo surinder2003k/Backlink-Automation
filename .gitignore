@@ -9,5 +9,6 @@ playwright-report/
 test-results/
 playwright.conf.ts
 scripts/
+.playwright-mcp/
 .env.vercel
 VERCEL-ENV.txt

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,10 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   const postingId = externalPostingId || internalPostingId;
+
+  useEffect(() => {
+    if (postingId) setSelectedPost(null);
+  }, [postingId]);
 
   const filtered = posts.filter((post) => {
     const matchSearch =

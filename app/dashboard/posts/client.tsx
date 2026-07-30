@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { PostsTable } from "@/components/dashboard/posts-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +28,6 @@ interface Post {
 }
 
 const PLATFORMS = ["devto", "blogger", "tumblr"];
-const PLATFORM_TIMES: Record<string, number> = { devto: 3000, blogger: 4000, tumblr: 3000 };
 
 interface PostsClientProps {
   posts: Post[];
@@ -45,52 +43,24 @@ export function PostsClient({ posts }: PostsClientProps) {
   const [scheduleAt, setScheduleAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [postingId, setPostingId] = useState<string | null>(null);
-  const [postProgress, setPostProgress] = useState({ current: 0, total: 0, platform: "", eta: 0, results: [] as any[] });
+  const [postingPlatform, setPostingPlatform] = useState("");
 
-  const handlePostNow = async (id: string) => {
-    const post = posts.find((p) => p.id === id);
-    if (!post) return;
-    const platforms = post.platforms;
-    const totalTime = platforms.reduce((sum, p) => sum + (PLATFORM_TIMES[p] || 3000), 0);
-
+  const triggerPost = async (id: string, platforms: string[]) => {
     setPostingId(id);
-    setPostProgress({ current: 0, total: platforms.length, platform: "", eta: Math.ceil(totalTime / 1000), results: [] });
-
-    let elapsed = 0;
-    for (let i = 0; i < platforms.length; i++) {
-      const p = platforms[i];
-      const pTime = PLATFORM_TIMES[p] || 3000;
-      setPostProgress((prev) => ({
-        ...prev,
-        current: i,
-        platform: p,
-        eta: Math.ceil((totalTime - elapsed) / 1000),
-      }));
-      await new Promise((r) => setTimeout(r, pTime));
-      elapsed += pTime;
-    }
-
-    setPostProgress((prev) => ({ ...prev, current: platforms.length, platform: "Done!", eta: 0 }));
-
+    setPostingPlatform("generating content...");
     const res = await fetch("/api/post-now", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ postId: id }),
     });
-    if (res.ok) {
-      const data = await res.json();
-      setPostProgress((prev) => ({
-        ...prev,
-        results: Object.entries(data.results || {}).map(([k, v]: [string, any]) => ({
-          platform: k,
-          success: v.success,
-          url: v.url || v.id || null,
-          error: v.error || null,
-        })),
-      }));
-      router.refresh();
-    }
-    setTimeout(() => { setPostingId(null); setPostProgress({ current: 0, total: 0, platform: "", eta: 0, results: [] }); }, 3000);
+    if (res.ok) router.refresh();
+    setTimeout(() => { setPostingId(null); setPostingPlatform(""); }, 2000);
+  };
+
+  const handlePostNow = async (id: string) => {
+    const post = posts.find((p) => p.id === id);
+    if (!post) return;
+    await triggerPost(id, post.platforms);
   };
 
   const handleDelete = async (id: string) => {
@@ -107,8 +77,14 @@ export function PostsClient({ posts }: PostsClientProps) {
       body: JSON.stringify({ title, url, excerpt, platforms: selectedPlatforms, scheduled_at: scheduleAt || null }),
     });
     if (res.ok) {
+      const data = await res.json();
       setShowNew(false);
       setTitle(""); setUrl(""); setExcerpt(""); setSelectedPlatforms([]); setScheduleAt("");
+      if (!scheduleAt) {
+        setSaving(false);
+        await triggerPost(data.id, selectedPlatforms);
+        return;
+      }
       router.refresh();
     }
     setSaving(false);
@@ -130,54 +106,12 @@ export function PostsClient({ posts }: PostsClientProps) {
         </Button>
       </div>
 
-      {postingId && postProgress.total > 0 && (
-        <Card className="border-cyber-cyan/30 bg-cyber-cyan/5">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin text-cyber-cyan" />
-                <span className="text-sm font-mono text-cyber-text">
-                  Posting to <span className="text-cyber-cyan">{postProgress.platform}</span>...
-                </span>
-              </div>
-              <span className="text-xs font-mono text-cyber-text-muted">
-                {postProgress.current}/{postProgress.total} platforms
-                {postProgress.eta > 0 && ` ~${postProgress.eta}s left`}
-              </span>
-            </div>
-            <div className="w-full bg-cyber-border rounded-full h-2">
-              <div
-                className="bg-cyber-cyan h-2 rounded-full transition-all duration-500"
-                style={{ width: `${(postProgress.current / postProgress.total) * 100}%` }}
-              />
-            </div>
-            {postProgress.results.length > 0 && (
-              <div className="mt-3 space-y-1">
-                {postProgress.results.map((r) => (
-                  <div key={r.platform} className="flex items-center gap-2 text-xs">
-                    <span className={r.success ? "text-green-400" : "text-cyber-red"}>
-                      {r.success ? "✓" : "✗"}
-                    </span>
-                    <span className="font-mono text-cyber-text-muted">{r.platform}</span>
-                    {r.url && (
-                      <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-cyber-cyan hover:underline">
-                        View Post ↗
-                      </a>
-                    )}
-                    {r.error && <span className="text-cyber-red">{r.error}</span>}
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
       <PostsTable
         posts={posts}
         onPostNow={handlePostNow}
         onDelete={handleDelete}
         postingId={postingId}
+        postingPlatform={postingPlatform}
       />
 
       <Dialog open={showNew} onOpenChange={setShowNew}>
@@ -222,7 +156,7 @@ export function PostsClient({ posts }: PostsClientProps) {
             <div className="flex justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => setShowNew(false)}>Cancel</Button>
               <Button type="submit" disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} {scheduleAt ? "Schedule" : "Create"}
+                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} {scheduleAt ? "Schedule" : "Post Now"}
               </Button>
             </div>
           </form>

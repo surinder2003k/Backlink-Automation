@@ -22,10 +22,11 @@ export async function generateArticleContent(
         },
         body: JSON.stringify({
           model: "mistralai/mistral-7b-instruct:free",
+          max_tokens: 2000,
           messages: [
             {
               role: "user",
-              content: `Write a well-written, informative article of 300-400 words about "${title}". ${excerpt ? `Here is some context: ${excerpt}. ` : ""}Naturally include a backlink to ${url} within the article (use it as a "Read more" link or integrate it naturally into the text). Do not use any markdown formatting. Write in plain text with clear paragraphs.`,
+              content: `Write a comprehensive, well-structured article of at least 700 words about "${title}". ${excerpt ? `Here is some context: ${excerpt}. ` : ""}The article should have: an engaging introduction, multiple informative sections with detailed explanations, practical examples or tips, and a conclusion. Naturally include a backlink to ${url} within the article (use it as a reference link or integrate it naturally). Do not use any markdown formatting like # or **. Write in plain text with clear paragraphs separated by blank lines. Make it informative, engaging, and valuable to readers.`,
             },
           ],
         }),

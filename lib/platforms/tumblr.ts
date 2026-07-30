@@ -59,7 +59,6 @@ export async function postToTumblr(
   excerpt?: string,
 ) {
   try {
-    // Get blog name from user info
     const userUrl = "https://api.tumblr.com/v2/user/info";
     const userAuth = buildOAuthHeader("GET", userUrl, {}, config.consumerKey, config.consumerSecret, config.accessToken, config.accessSecret);
     const userRes = await fetch(userUrl, { headers: { Authorization: userAuth } });
@@ -69,14 +68,13 @@ export async function postToTumblr(
     }
     const blogName = userData.response.user.blogs[0].name;
 
-    // Create link post
     const postUrl = `https://api.tumblr.com/v2/blog/${blogName}/post`;
+    const htmlBody = `<p>${excerpt || title}</p><p><a href="${url}">Read more here</a></p>`;
     const bodyParams: Record<string, string> = {
-      type: "link",
+      type: "text",
       title: title.slice(0, 250),
-      url: url,
-      description: excerpt || title,
-      tags: "backlink,blog",
+      body: htmlBody,
+      tags: "backlink,blog,education",
     };
 
     const auth = buildOAuthHeader("POST", postUrl, bodyParams, config.consumerKey, config.consumerSecret, config.accessToken, config.accessSecret);
@@ -89,12 +87,14 @@ export async function postToTumblr(
       body: new URLSearchParams(bodyParams).toString(),
     });
     const data = (await response.json()) as any;
-    if (!response.ok) {
-      throw new Error(data?.meta?.msg || "Tumblr API error");
+    if (!response.ok || data?.meta?.status !== 201) {
+      throw new Error(data?.meta?.msg || `Tumblr API error: ${response.status}`);
     }
-    return { success: true, id: String(data?.response?.id || "ok"), url: data?.response?.post_url || `https://${blogName}.tumblr.com/post/${data?.response?.id}` };
+    const postId = data?.response?.id;
+    const postUrl2 = `https://${blogName}.tumblr.com/post/${postId}`;
+    return { success: true, id: String(postId || "ok"), url: data?.response?.post_url || postUrl2 };
   } catch (error: any) {
-    console.error("Tumblr post error:", error);
+    console.error("Tumblr post error:", error.message);
     return { success: false, error: error.message };
   }
 }

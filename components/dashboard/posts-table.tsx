@@ -46,9 +46,10 @@ interface PostsTableProps {
   onPostNow: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   postingId?: string | null;
+  postingPlatform?: string;
 }
 
-export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPostingId }: PostsTableProps) {
+export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPostingId, postingPlatform }: PostsTableProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [internalPostingId, setInternalPostingId] = useState<string | null>(null);
@@ -73,14 +74,9 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
   };
 
   const platformColors: Record<string, string> = {
-    twitter: "text-cyber-cyan",
-    linkedin: "text-blue-400",
-    reddit: "text-orange-400",
-    medium: "text-green-400",
     devto: "text-purple-400",
     blogger: "text-yellow-400",
     tumblr: "text-blue-300",
-    hashnode: "text-blue-500",
   };
 
   return (
@@ -142,102 +138,120 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((post) => (
-                    <tr
-                      key={post.id}
-                      onClick={() => setSelectedPost(post)}
-                      className="border-b border-cyber-border/50 hover:bg-cyber-card-hover/50 transition-colors cursor-pointer"
-                    >
-                      <td className="py-3 pr-4">
-                        <div className="min-w-0 max-w-[250px]">
-                          <p className="text-sm text-cyber-text truncate">
-                            {post.title}
-                          </p>
-                          <a
-                            href={post.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-cyber-text-muted hover:text-cyber-cyan mt-0.5"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            {post.url.replace(/^https?:\/\//, "").slice(0, 30)}
-                          </a>
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <div className="flex gap-1.5 flex-wrap">
-                          {post.platforms.map((p) => {
-                            const result = post.platform_results?.[p];
-                            const postUrl = result?.url;
-                            return postUrl ? (
-                              <a
-                                key={p}
-                                href={postUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`font-mono text-[10px] uppercase ${platformColors[p] || "text-cyber-text-muted"} hover:underline`}
-                                title={postUrl}
-                              >
-                                {p} ↗
-                              </a>
-                            ) : (
-                              <span
-                                key={p}
-                                className={`font-mono text-[10px] uppercase ${platformColors[p] || "text-cyber-text-muted"}`}
-                              >
-                                {p}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <Badge
-                          variant={
-                            post.status === "published"
-                              ? "published"
-                              : post.status === "failed"
-                              ? "failed"
-                              : "pending"
-                          }
-                        >
-                          {post.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <span className="font-mono text-xs text-cyber-text-muted">
-                          {formatDate(post.created_at)}
-                        </span>
-                      </td>
-                      <td className="py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => { e.stopPropagation(); handlePostNow(post.id); }}
-                            disabled={postingId === post.id}
-                            title="Post Now"
-                            className="text-cyber-cyan hover:text-cyber-cyan"
-                          >
-                            {postingId === post.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Send className="h-3.5 w-3.5" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => { e.stopPropagation(); setConfirmDelete(post.id); }}
-                            title="Delete"
-                            className="text-cyber-text-muted hover:text-cyber-red"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {filtered.map((post) => {
+                    const isPosting = postingId === post.id;
+                    return (
+                      <tr
+                        key={post.id}
+                        onClick={() => !isPosting && setSelectedPost(post)}
+                        className={`border-b border-cyber-border/50 transition-colors ${isPosting ? "bg-cyber-cyan/5" : "hover:bg-cyber-card-hover/50 cursor-pointer"}`}
+                      >
+                        <td className="py-3 pr-4">
+                          <div className="min-w-0 max-w-[250px]">
+                            <p className="text-sm text-cyber-text truncate">
+                              {post.title}
+                            </p>
+                            <a
+                              href={post.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-cyber-text-muted hover:text-cyber-cyan mt-0.5"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              {post.url.replace(/^https?:\/\//, "").slice(0, 30)}
+                            </a>
+                          </div>
+                        </td>
+                        <td className="py-3 pr-4">
+                          {isPosting ? (
+                            <div className="flex items-center gap-2">
+                              <Loader2 className="h-3 w-3 animate-spin text-cyber-cyan" />
+                              <span className="text-xs font-mono text-cyber-cyan">{postingPlatform || "posting..."}</span>
+                            </div>
+                          ) : (
+                            <div className="flex gap-1.5 flex-wrap">
+                              {post.platforms.map((p) => {
+                                const result = post.platform_results?.[p];
+                                const postUrl = result?.url;
+                                return postUrl ? (
+                                  <a
+                                    key={p}
+                                    href={postUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`font-mono text-[10px] uppercase ${platformColors[p] || "text-cyber-text-muted"} hover:underline`}
+                                    title={postUrl}
+                                  >
+                                    {p} ↗
+                                  </a>
+                                ) : (
+                                  <span
+                                    key={p}
+                                    className={`font-mono text-[10px] uppercase ${platformColors[p] || "text-cyber-text-muted"}`}
+                                  >
+                                    {p}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 pr-4">
+                          {isPosting ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 bg-cyber-border rounded-full h-1.5">
+                                <div className="bg-cyber-cyan h-1.5 rounded-full animate-pulse" style={{ width: "60%" }} />
+                              </div>
+                            </div>
+                          ) : (
+                            <Badge
+                              variant={
+                                post.status === "published"
+                                  ? "published"
+                                  : post.status === "failed"
+                                  ? "failed"
+                                  : "pending"
+                              }
+                            >
+                              {post.status}
+                            </Badge>
+                          )}
+                        </td>
+                        <td className="py-3 pr-4">
+                          <span className="font-mono text-xs text-cyber-text-muted">
+                            {formatDate(post.created_at)}
+                          </span>
+                        </td>
+                        <td className="py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); handlePostNow(post.id); }}
+                              disabled={isPosting}
+                              title="Post Now"
+                              className="text-cyber-cyan hover:text-cyber-cyan"
+                            >
+                              {isPosting ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Send className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); setConfirmDelete(post.id); }}
+                              title="Delete"
+                              className="text-cyber-text-muted hover:text-cyber-red"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

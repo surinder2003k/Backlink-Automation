@@ -44,11 +44,11 @@ function pickRandomLinks(urls: string[], exclude: string, count: number): string
 }
 
 export function linksToMarkdown(text: string): string {
-  return text.replace(/(?<!\()(https?:\/\/[^\s,;)>]+)/g, "[$1]($1)");
+  return text.replace(/(?<!\()(https?:\/\/[^\s,;)>]+)/g, (match) => `[${match}](${match})`);
 }
 
 export function linksToHtml(text: string): string {
-  return text.replace(/(?<!["\ href=])(https?:\/\/[^\s,;)<]+)/g, '<a href="$1">$1</a>');
+  return text.replace(/(?<!href="|src=")(https?:\/\/[^\s,;<]+)/g, (match) => `<a href="${match}">${match}</a>`);
 }
 
 function generateLocalArticle(title: string, url: string, excerpt?: string, extraLinks: string[] = []): string {

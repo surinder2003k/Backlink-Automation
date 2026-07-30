@@ -106,108 +106,57 @@ export function PostsTable({ posts, onDelete }: PostsTableProps) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-cyber-border">
-                    <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">
-                      Title
-                    </th>
-                    <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">
-                      Platforms
-                    </th>
-                    <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">
-                      Status
-                    </th>
-                    <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">
-                      Date
-                    </th>
-                    <th className="text-right font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3">
-                      Actions
-                    </th>
+                    <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">Title</th>
+                    <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">Status</th>
+                    <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">Date</th>
+                    <th className="text-right font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((post) => {
-                    return (
-                      <tr
-                        key={post.id}
-                        onClick={() => setSelectedPost(post)}
-                        className="border-b border-cyber-border/50 transition-colors hover:bg-cyber-card-hover/50 cursor-pointer"
-                      >
-                        <td className="py-3 pr-4">
-                          <div className="min-w-0 max-w-[250px]">
-                            <p className="text-sm text-cyber-text truncate">
-                              {post.title}
-                            </p>
-                            <a
-                              href={post.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-xs text-cyber-text-muted hover:text-cyber-cyan mt-0.5"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                              {post.url.replace(/^https?:\/\//, "").slice(0, 30)}
-                            </a>
-                          </div>
-                        </td>
-                        <td className="py-3 pr-4">
-                          <div className="flex gap-1.5 flex-wrap">
-                            {post.platforms.map((p) => {
-                              const result = post.platform_results?.[p];
-                              const postUrl = result?.url;
-                              return postUrl ? (
-                                <a
-                                  key={p}
-                                  href={postUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`font-mono text-[10px] uppercase ${platformColors[p] || "text-cyber-text-muted"} hover:underline`}
-                                  title={postUrl}
-                                >
-                                  {p} ↗
-                                </a>
-                              ) : (
-                                <span
-                                  key={p}
-                                  className={`font-mono text-[10px] uppercase ${platformColors[p] || "text-cyber-text-muted"}`}
-                                >
-                                  {p}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </td>
-                        <td className="py-3 pr-4">
-                          <Badge
-                            variant={
-                              post.status === "published"
-                                ? "published"
-                                : post.status === "failed"
-                                ? "failed"
-                                : "pending"
-                            }
+                  {filtered.map((post) => (
+                    <tr
+                      key={post.id}
+                      onClick={() => setSelectedPost(post)}
+                      className="border-b border-cyber-border/50 transition-colors hover:bg-cyber-card-hover/50 cursor-pointer"
+                    >
+                      <td className="py-3 pr-4">
+                        <div className="min-w-0 max-w-[350px]">
+                          <p className="text-sm text-cyber-text truncate">{post.title}</p>
+                          <a
+                            href={post.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-cyber-text-muted hover:text-cyber-cyan mt-0.5"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            {post.status}
-                          </Badge>
-                        </td>
-                        <td className="py-3 pr-4">
-                          <span className="font-mono text-xs text-cyber-text-muted">
-                            {formatDate(post.created_at)}
-                          </span>
-                        </td>
-                        <td className="py-3 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => { e.stopPropagation(); setConfirmDelete(post.id); }}
-                              title="Delete"
-                              className="text-cyber-text-muted hover:text-cyber-red"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                            <ExternalLink className="h-3 w-3" />
+                            {post.url.replace(/^https?:\/\//, "").slice(0, 40)}
+                          </a>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <Badge variant={post.status === "published" ? "published" : post.status === "failed" ? "failed" : "pending"}>
+                          {post.status}
+                        </Badge>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <span className="font-mono text-xs text-cyber-text-muted">
+                          {formatDate(post.created_at)}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); setConfirmDelete(post.id); }}
+                          title="Delete"
+                          className="text-cyber-text-muted hover:text-cyber-red"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -215,48 +164,26 @@ export function PostsTable({ posts, onDelete }: PostsTableProps) {
         </CardContent>
       </Card>
 
-      <Dialog
-        open={!!confirmDelete}
-        onOpenChange={() => setConfirmDelete(null)}
-      >
+      <Dialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Post</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this post? This action cannot be
-              undone.
-            </DialogDescription>
+            <DialogDescription>Are you sure? This cannot be undone.</DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => setConfirmDelete(null)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={async () => {
-                if (confirmDelete) {
-                  await onDelete(confirmDelete);
-                  setConfirmDelete(null);
-                }
-              }}
-            >
-              Delete
-            </Button>
+            <Button variant="secondary" onClick={() => setConfirmDelete(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={async () => {
+              if (confirmDelete) { await onDelete(confirmDelete); setConfirmDelete(null); }
+            }}>Delete</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={!!selectedPost}
-        onOpenChange={() => setSelectedPost(null)}
-      >
+      <Dialog open={!!selectedPost} onOpenChange={() => setSelectedPost(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{selectedPost?.title}</DialogTitle>
-            <DialogDescription>Post details and platform results</DialogDescription>
+            <DialogDescription>Published blogs on each platform</DialogDescription>
           </DialogHeader>
           {selectedPost && (
             <div className="space-y-4">
@@ -272,31 +199,38 @@ export function PostsTable({ posts, onDelete }: PostsTableProps) {
                 </a>
               </div>
               <div>
-                <p className="font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider mb-2">Platforms</p>
-                <div className="space-y-2">
+                <p className="font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider mb-2">Platforms & Blog Links</p>
+                <div className="space-y-3">
                   {selectedPost.platforms.map((p) => {
                     const result = selectedPost.platform_results?.[p];
                     const postUrl = result?.url;
+                    const isOk = result?.success === true;
+                    const isFailed = result?.success === false && result?.error;
                     return (
-                      <div key={p} className="flex items-center justify-between rounded-md border border-cyber-border/50 px-3 py-2">
-                        <span className={`font-mono text-xs uppercase ${platformColors[p] || "text-cyber-text-muted"}`}>
-                          {p}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className={`font-mono text-[10px] ${result?.status === "success" ? "text-green-400" : result?.status === "failed" ? "text-cyber-red" : "text-cyber-text-muted"}`}>
-                            {result?.status || "pending"}
+                      <div key={p} className="rounded-md border border-cyber-border/50 px-3 py-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className={`font-mono text-xs uppercase font-bold ${platformColors[p] || "text-cyber-text-muted"}`}>
+                            {p}
                           </span>
-                          {postUrl ? (
-                            <a
-                              href={postUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-cyber-cyan hover:underline"
-                            >
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            </a>
-                          ) : null}
+                          <span className={`font-mono text-[10px] ${isOk ? "text-green-400" : isFailed ? "text-cyber-red" : "text-cyber-text-muted"}`}>
+                            {isOk ? "published" : isFailed ? "failed" : "pending"}
+                          </span>
                         </div>
+                        {postUrl ? (
+                          <a
+                            href={postUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-cyber-cyan hover:underline break-all"
+                          >
+                            <ExternalLink className="h-3 w-3 shrink-0" />
+                            {postUrl.length > 60 ? postUrl.slice(0, 60) + "..." : postUrl}
+                          </a>
+                        ) : isFailed ? (
+                          <p className="text-[10px] text-cyber-red">{result?.error || "Failed to post"}</p>
+                        ) : (
+                          <p className="text-[10px] text-cyber-text-muted">Not posted yet</p>
+                        )}
                       </div>
                     );
                   })}

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { Calendar, Clock } from "lucide-react";
 
 interface DateTimePickerProps {
@@ -19,9 +18,7 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
   const [timeH, setTimeH] = useState("12");
   const [timeM, setTimeM] = useState("00");
-  const [pos, setPos] = useState({ top: 0, left: 0 });
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const selectedDate = value ? new Date(value) : null;
   const minDate = min ? new Date(min) : null;
@@ -29,46 +26,19 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
-      if (
-        panelRef.current && !panelRef.current.contains(e.target as Node) &&
-        btnRef.current && !btnRef.current.contains(e.target as Node)
-      ) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
-    document.addEventListener("mousedown", handleClick, true);
+    document.addEventListener("mousedown", handleClick);
     document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener("mousedown", handleClick, true);
+      document.removeEventListener("mousedown", handleClick);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
-
-  useEffect(() => {
-    if (open && btnRef.current) {
-      const rect = btnRef.current.getBoundingClientRect();
-      const calWidth = 288;
-      const calHeight = 340;
-      const gap = 8;
-
-      let left = rect.right + gap;
-      let top = rect.top;
-
-      if (left + calWidth > window.innerWidth) {
-        left = rect.left - calWidth - gap;
-      }
-      if (left < 0) left = rect.left;
-
-      if (top + calHeight > window.innerHeight) {
-        top = window.innerHeight - calHeight - 8;
-      }
-      if (top < 0) top = 8;
-
-      setPos({ top, left });
-    }
   }, [open]);
 
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -120,15 +90,21 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
     return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   };
 
-  const calendarPanel = open && typeof document !== "undefined"
-    ? createPortal(
-        <div
-          ref={panelRef}
-          style={{ top: pos.top, left: pos.left }}
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
-          className="fixed z-[9999] w-72 rounded-md border border-cyber-border bg-cyber-bg shadow-2xl"
-        >
+  return (
+    <div ref={wrapperRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-2 rounded-md border border-cyber-border bg-cyber-bg px-3 py-2 text-sm text-cyber-text hover:border-cyber-cyan/50 transition-colors text-left"
+      >
+        <Calendar className="h-4 w-4 text-cyber-cyan shrink-0" />
+        <span className={value ? "text-cyber-text" : "text-cyber-text-muted"}>
+          {value ? formatDisplay() : "Select date & time"}
+        </span>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 z-[9999] w-72 rounded-md border border-cyber-border bg-cyber-bg shadow-2xl">
           <div className="flex items-center justify-between px-3 py-2 border-b border-cyber-border">
             <button type="button" onClick={prevMonth} className="text-cyber-text-muted hover:text-cyber-cyan text-lg leading-none">&lsaquo;</button>
             <span className="text-sm font-mono text-cyber-text">{MONTHS[viewMonth]} {viewYear}</span>
@@ -196,25 +172,8 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
               Done
             </button>
           </div>
-        </div>,
-        document.body
-      )
-    : null;
-
-  return (
-    <>
-      <button
-        ref={btnRef}
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 rounded-md border border-cyber-border bg-cyber-bg px-3 py-2 text-sm text-cyber-text hover:border-cyber-cyan/50 transition-colors text-left"
-      >
-        <Calendar className="h-4 w-4 text-cyber-cyan shrink-0" />
-        <span className={value ? "text-cyber-text" : "text-cyber-text-muted"}>
-          {value ? formatDisplay() : "Select date & time"}
-        </span>
-      </button>
-      {calendarPanel}
-    </>
+        </div>
+      )}
+    </div>
   );
 }

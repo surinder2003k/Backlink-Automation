@@ -43,7 +43,24 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
   useEffect(() => {
     if (open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
-      setPos({ top: rect.bottom + 4, left: rect.left });
+      const calWidth = 288;
+      const calHeight = 340;
+      const gap = 8;
+
+      let left = rect.right + gap;
+      let top = rect.top;
+
+      if (left + calWidth > window.innerWidth) {
+        left = rect.left - calWidth - gap;
+      }
+      if (left < 0) left = rect.left;
+
+      if (top + calHeight > window.innerHeight) {
+        top = window.innerHeight - calHeight - 8;
+      }
+      if (top < 0) top = 8;
+
+      setPos({ top, left });
     }
   }, [open]);
 

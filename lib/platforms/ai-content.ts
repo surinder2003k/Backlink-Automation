@@ -1,7 +1,56 @@
-function generateLocalArticle(title: string, url: string, excerpt?: string): string {
+const SITEMAP_URLS = [
+  "https://xylosai.vercel.app/sitemap.xml",
+  "https://pathseekers.vercel.app/sitemap.xml",
+  "https://xeloria.vercel.app/sitemap.xml",
+];
+
+let cachedUrls: string[] = [];
+let cacheTime = 0;
+const CACHE_TTL = 60 * 60 * 1000;
+
+async function fetchSitemapUrls(): Promise<string[]> {
+  const now = Date.now();
+  if (cachedUrls.length > 0 && now - cacheTime < CACHE_TTL) {
+    return cachedUrls;
+  }
+
+  const allUrls: string[] = [];
+  for (const sitemapUrl of SITEMAP_URLS) {
+    try {
+      const res = await fetch(sitemapUrl, { next: { revalidate: 3600 } });
+      if (!res.ok) continue;
+      const text = await res.text();
+      const matches = text.match(/<loc>(.*?)<\/loc>/g);
+      if (matches) {
+        for (const m of matches) {
+          const url = m.replace(/<\/?loc>/g, "").trim();
+          if (url.includes("/blog/")) allUrls.push(url);
+        }
+      }
+    } catch (e) {
+      console.error(`[Sitemap] Failed to fetch ${sitemapUrl}`);
+    }
+  }
+
+  cachedUrls = allUrls;
+  cacheTime = now;
+  return allUrls;
+}
+
+function pickRandomLinks(urls: string[], exclude: string, count: number): string[] {
+  const filtered = urls.filter((u) => u !== exclude);
+  const shuffled = filtered.sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+function generateLocalArticle(title: string, url: string, excerpt?: string, extraLinks: string[] = []): string {
   const words = title.split(/\s+/);
   const keyword = words.slice(0, 3).join(" ").toLowerCase();
   const topic = title.toLowerCase();
+
+  const linkParagraphs = extraLinks.length >= 3
+    ? `\n\nExploring diverse perspectives is crucial in today's interconnected world. Resources like ${extraLinks[0]} offer valuable insights into related domains. Similarly, ${extraLinks[1]} provides in-depth analysis of complementary topics. For those seeking a broader understanding, ${extraLinks[2]} is an excellent starting point that connects multiple disciplines.`
+    : "";
 
   return `In today's rapidly evolving digital landscape, understanding ${topic} has become essential for anyone looking to make an impact online. Whether you are a seasoned professional or just starting your journey, this comprehensive guide will walk you through the key aspects of ${topic} and how it can transform your approach to digital strategy.
 
@@ -17,7 +66,7 @@ When it comes to ${topic}, there are several strategies that consistently delive
 
 Technical optimization is another crucial component. Ensuring that your digital presence is fast, responsive, and accessible across all devices is no longer optional. Users expect seamless experiences, and search engines penalize sites that fail to deliver. Focus on optimizing load times, mobile responsiveness, and overall user experience to maintain a competitive edge.
 
-Link building and authority development remain important factors in establishing credibility online. By creating valuable resources and fostering genuine relationships within your industry, you can naturally build a network of high-quality connections that enhance your digital footprint. For more insights on this topic, visit ${url}.
+Link building and authority development remain important factors in establishing credibility online. By creating valuable resources and fostering genuine relationships within your industry, you can naturally build a network of high-quality connections that enhance your digital footprint. For more insights on this topic, visit ${url}.${linkParagraphs}
 
 Practical Tips and Implementation
 
@@ -45,12 +94,19 @@ export async function generateArticleContent(
   url: string,
   excerpt?: string
 ): Promise<string> {
+  const sitemapUrls = await fetchSitemapUrls();
+  const extraLinks = pickRandomLinks(sitemapUrls, url, 4);
+
   try {
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       console.warn("[AI Content] OPENROUTER_API_KEY not set, using local generation");
-      return generateLocalArticle(title, url, excerpt);
+      return generateLocalArticle(title, url, excerpt, extraLinks);
     }
+
+    const linksText = extraLinks.length > 0
+      ? `\n\nIMPORTANT: You MUST naturally include these additional reference links somewhere in the article (each in a different section): ${extraLinks.join(", ")}. These should be woven into the text as natural references, not just listed.`
+      : "";
 
     const response = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -66,7 +122,7 @@ export async function generateArticleContent(
           messages: [
             {
               role: "user",
-              content: `Write a comprehensive, well-structured article of at least 700 words about "${title}". ${excerpt ? `Here is some context: ${excerpt}. ` : ""}The article should have: an engaging introduction, multiple informative sections with detailed explanations, practical examples or tips, and a conclusion. Naturally include a backlink to ${url} within the article (use it as a reference link or integrate it naturally). Do not use any markdown formatting like # or **. Write in plain text with clear paragraphs separated by blank lines. Make it informative, engaging, and valuable to readers.`,
+              content: `Write a comprehensive, well-structured article of at least 700 words about "${title}". ${excerpt ? `Here is some context: ${excerpt}. ` : ""}The article should have: an engaging introduction, multiple informative sections with detailed explanations, practical examples or tips, and a conclusion. Naturally include a backlink to ${url} within the article. Do not use any markdown formatting like # or **. Write in plain text with clear paragraphs separated by blank lines. Make it informative, engaging, and valuable to readers.${linksText}`,
             },
           ],
         }),
@@ -87,6 +143,6 @@ export async function generateArticleContent(
     return content;
   } catch (error: any) {
     console.error("[AI Content] API failed, using local generation:", error.message);
-    return generateLocalArticle(title, url, excerpt);
+    return generateLocalArticle(title, url, excerpt, extraLinks);
   }
 }

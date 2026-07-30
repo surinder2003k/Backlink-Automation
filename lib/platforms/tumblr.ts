@@ -59,9 +59,11 @@ export async function postToTumblr(
     if (!response.ok) {
       throw new Error(data?.meta?.msg || `Tumblr API error: ${response.status}`);
     }
-    const postId = Array.isArray(data?.response) ? data.response[0] : data?.response?.id;
-    const constructedUrl = `https://${blogName}.tumblr.com/post/${postId}`;
-    return { success: true, id: String(postId || "ok"), url: data?.response?.post_url || constructedUrl };
+    const resp = data?.response || {};
+    const idString = resp.id_string || String(resp.id || "");
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const constructedUrl = `https://www.tumblr.com/${blogName}/${idString}/${slug}`;
+    return { success: true, id: idString || "ok", url: resp.post_url || constructedUrl };
   } catch (error: any) {
     console.error("Tumblr post error:", error.message);
     return { success: false, error: error.message };

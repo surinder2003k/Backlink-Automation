@@ -60,10 +60,17 @@ export function PostsClient({ posts }: PostsClientProps) {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+
+    let scheduledISO: string | null = null;
+    if (scheduleAt) {
+      const localDate = new Date(scheduleAt);
+      scheduledISO = localDate.toISOString();
+    }
+
     const res = await fetch("/api/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, url, excerpt, platforms: selectedPlatforms, scheduled_at: scheduleAt || null }),
+      body: JSON.stringify({ title, url, excerpt, platforms: selectedPlatforms, scheduled_at: scheduledISO }),
     });
     if (res.ok) {
       const data = await res.json();
@@ -135,7 +142,15 @@ export function PostsClient({ posts }: PostsClientProps) {
               <DateTimePicker
                 value={scheduleAt}
                 onChange={setScheduleAt}
-                min={new Date().toISOString().slice(0, 16)}
+                min={(() => {
+                  const now = new Date();
+                  const y = now.getFullYear();
+                  const m = String(now.getMonth() + 1).padStart(2, "0");
+                  const d = String(now.getDate()).padStart(2, "0");
+                  const h = String(now.getHours()).padStart(2, "0");
+                  const min = String(now.getMinutes()).padStart(2, "0");
+                  return `${y}-${m}-${d}T${h}:${min}`;
+                })()}
               />
               <p className="text-[10px] text-cyber-text-muted">Leave empty to post immediately</p>
             </div>

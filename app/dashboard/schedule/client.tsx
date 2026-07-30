@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -70,6 +70,22 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
   });
 
   const now = new Date();
+
+  useEffect(() => {
+    const overdue = posts.filter(
+      (p) => p.status === "pending" && p.scheduled_at && new Date(p.scheduled_at) <= new Date()
+    );
+    if (overdue.length > 0) {
+      overdue.forEach(async (post) => {
+        await fetch("/api/post-now", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ postId: post.id }),
+        });
+      });
+      setTimeout(() => window.location.reload(), 3000);
+    }
+  }, []);
 
   const handlePostNow = async (id: string) => {
     setPostingId(id);

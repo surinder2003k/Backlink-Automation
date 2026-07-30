@@ -63,7 +63,7 @@ export default function LoginPage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="sunny"
+                  placeholder="Enter your username"
                   required
                 />
               </div>
@@ -75,7 +75,7 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••"
+                  placeholder="Enter your password"
                   required
                 />
               </div>

@@ -18,7 +18,7 @@ export async function postToDevTo(
       body: JSON.stringify({
         article: {
           title,
-          body_markdown: `${excerpt || title}\n\n[Read more](${url})`,
+          body_markdown: `${(excerpt || title).replace(new RegExp(url, "g"), `[Read the full article here](${url})`)}\n\n[Read more on our blog](${url})`,
           published: true,
           tags: ["backlink", "blog"],
         },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Calendar, Clock } from "lucide-react";
 
 interface DateTimePickerProps {
@@ -18,6 +19,7 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
   const [timeH, setTimeH] = useState("12");
   const [timeM, setTimeM] = useState("00");
+  const [pos, setPos] = useState({ top: 0, left: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -27,7 +29,10 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node) && btnRef.current && !btnRef.current.contains(e.target as Node)) {
+      if (
+        panelRef.current && !panelRef.current.contains(e.target as Node) &&
+        btnRef.current && !btnRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     };
@@ -38,10 +43,7 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
   useEffect(() => {
     if (open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
-      if (panelRef.current) {
-        panelRef.current.style.top = `${rect.bottom + 4}px`;
-        panelRef.current.style.left = `${rect.left}px`;
-      }
+      setPos({ top: rect.bottom + 4, left: rect.left });
     }
   }, [open]);
 
@@ -94,23 +96,11 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
     return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   };
 
-  return (
-    <>
-      <button
-        ref={btnRef}
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 rounded-md border border-cyber-border bg-cyber-bg px-3 py-2 text-sm text-cyber-text hover:border-cyber-cyan/50 transition-colors text-left"
-      >
-        <Calendar className="h-4 w-4 text-cyber-cyan shrink-0" />
-        <span className={value ? "text-cyber-text" : "text-cyber-text-muted"}>
-          {value ? formatDisplay() : "Select date & time"}
-        </span>
-      </button>
-
-      {open && (
+  const calendarPanel = open && typeof document !== "undefined"
+    ? createPortal(
         <div
           ref={panelRef}
+          style={{ top: pos.top, left: pos.left }}
           className="fixed z-[9999] w-72 rounded-md border border-cyber-border bg-cyber-bg shadow-2xl"
         >
           <div className="flex items-center justify-between px-3 py-2 border-b border-cyber-border">
@@ -118,13 +108,11 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
             <span className="text-sm font-mono text-cyber-text">{MONTHS[viewMonth]} {viewYear}</span>
             <button type="button" onClick={nextMonth} className="text-cyber-text-muted hover:text-cyber-cyan text-lg leading-none">&rsaquo;</button>
           </div>
-
           <div className="grid grid-cols-7 px-2 pt-2">
             {DAYS.map((d) => (
               <div key={d} className="text-center text-[10px] font-mono text-cyber-text-muted py-1">{d}</div>
             ))}
           </div>
-
           <div className="grid grid-cols-7 px-2 pb-2">
             {Array.from({ length: firstDay }).map((_, i) => (
               <div key={`empty-${i}`} />
@@ -153,7 +141,6 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
               );
             })}
           </div>
-
           <div className="flex items-center gap-2 px-3 py-2 border-t border-cyber-border">
             <Clock className="h-4 w-4 text-cyber-cyan shrink-0" />
             <select
@@ -183,8 +170,25 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
               Done
             </button>
           </div>
-        </div>
-      )}
+        </div>,
+        document.body
+      )
+    : null;
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-2 rounded-md border border-cyber-border bg-cyber-bg px-3 py-2 text-sm text-cyber-text hover:border-cyber-cyan/50 transition-colors text-left"
+      >
+        <Calendar className="h-4 w-4 text-cyber-cyan shrink-0" />
+        <span className={value ? "text-cyber-text" : "text-cyber-text-muted"}>
+          {value ? formatDisplay() : "Select date & time"}
+        </span>
+      </button>
+      {calendarPanel}
     </>
   );
 }

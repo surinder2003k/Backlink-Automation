@@ -16,16 +16,22 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const body = await req.json();
-  const { title, url, excerpt, platforms } = body;
+  const { title, url, excerpt, platforms, scheduled_at } = body;
+
+  const insertData: any = {
+    title,
+    url,
+    excerpt,
+    platforms,
+  };
+  if (scheduled_at) {
+    insertData.scheduled_at = scheduled_at;
+    insertData.status = "pending";
+  }
 
   const { data, error } = await supabase
     .from("posts")
-    .insert({
-      title,
-      url,
-      excerpt,
-      platforms,
-    })
+    .insert(insertData)
     .select()
     .single();
 

@@ -6,10 +6,10 @@ export const dynamic = "force-dynamic";
 export default async function SchedulePage() {
   const supabase = await createClient();
 
-  const { data: schedules } = await supabase
-    .from("schedules")
+  const { data: posts } = await supabase
+    .from("posts")
     .select("*")
-    .order("time_slot", { ascending: true });
+    .order("scheduled_at", { ascending: true });
 
-  return <ScheduleClient schedules={schedules || []} />;
+  return <ScheduleClient posts={posts || []} />;
 }

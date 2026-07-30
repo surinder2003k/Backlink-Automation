@@ -41,6 +41,7 @@ export function PostsClient({ posts }: PostsClientProps) {
   const [url, setUrl] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [scheduleAt, setScheduleAt] = useState("");
   const [saving, setSaving] = useState(false);
   const [postingId, setPostingId] = useState<string | null>(null);
   const [postProgress, setPostProgress] = useState({ current: 0, total: 0, platform: "", eta: 0, results: [] as any[] });
@@ -102,11 +103,11 @@ export function PostsClient({ posts }: PostsClientProps) {
     const res = await fetch("/api/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, url, excerpt, platforms: selectedPlatforms }),
+      body: JSON.stringify({ title, url, excerpt, platforms: selectedPlatforms, scheduled_at: scheduleAt || null }),
     });
     if (res.ok) {
       setShowNew(false);
-      setTitle(""); setUrl(""); setExcerpt(""); setSelectedPlatforms([]);
+      setTitle(""); setUrl(""); setExcerpt(""); setSelectedPlatforms([]); setScheduleAt("");
       router.refresh();
     }
     setSaving(false);
@@ -208,10 +209,20 @@ export function PostsClient({ posts }: PostsClientProps) {
                 ))}
               </div>
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-mono text-cyber-text-muted">Schedule (optional)</label>
+              <Input
+                type="datetime-local"
+                value={scheduleAt}
+                onChange={(e) => setScheduleAt(e.target.value)}
+                min={new Date().toISOString().slice(0, 16)}
+              />
+              <p className="text-[10px] text-cyber-text-muted">Leave empty to post immediately</p>
+            </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="secondary" onClick={() => setShowNew(false)}>Cancel</Button>
               <Button type="submit" disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Create
+                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} {scheduleAt ? "Schedule" : "Create"}
               </Button>
             </div>
           </form>

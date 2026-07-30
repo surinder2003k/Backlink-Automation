@@ -15,33 +15,22 @@ export async function GET(req: NextRequest) {
 
   const supabase = createServiceClient();
   const now = new Date();
-  const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 
-  const { data: schedules } = await supabase
-    .from("schedules")
+  const { data: pendingPosts } = await supabase
+    .from("posts")
     .select("*")
-    .eq("time_slot", currentTime)
-    .eq("is_active", true);
+    .eq("status", "pending")
+    .lte("scheduled_at", now.toISOString())
+    .not("scheduled_at", "is", null)
+    .order("scheduled_at", { ascending: true });
 
-  if (!schedules || schedules.length === 0) {
-    return NextResponse.json({ message: "No pending schedules", time: currentTime });
+  if (!pendingPosts || pendingPosts.length === 0) {
+    return NextResponse.json({ message: "No pending scheduled posts", count: 0 });
   }
 
   const results: any[] = [];
 
-  for (const schedule of schedules) {
-    const { data: pendingPosts } = await supabase
-      .from("posts")
-      .select("*")
-      .eq("status", "pending")
-      .order("created_at", { ascending: true })
-      .limit(1);
-
-    if (!pendingPosts || pendingPosts.length === 0) continue;
-
-    const post = pendingPosts[0];
-
-    // Generate AI content
+  for (const post of pendingPosts) {
     let articleContent = post.excerpt || post.title;
     try {
       articleContent = await generateArticleContent(post.title, post.url, post.excerpt || undefined);
@@ -52,7 +41,7 @@ export async function GET(req: NextRequest) {
     const platformResults: Record<string, any> = {};
     let allSuccess = true;
 
-    for (const platform of schedule.platforms) {
+    for (const platform of post.platforms || []) {
       try {
         let result;
         switch (platform) {

@@ -104,7 +104,7 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 bottom-full mb-2 z-[9999] w-72 rounded-md border border-cyber-border bg-cyber-bg shadow-2xl">
+        <div className="mt-2 w-full rounded-md border border-cyber-border bg-cyber-bg shadow-2xl">
           <div className="flex items-center justify-between px-3 py-2 border-b border-cyber-border">
             <button type="button" onClick={prevMonth} className="text-cyber-text-muted hover:text-cyber-cyan text-lg leading-none">&lsaquo;</button>
             <span className="text-sm font-mono text-cyber-text">{MONTHS[viewMonth]} {viewYear}</span>

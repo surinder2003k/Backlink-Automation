@@ -36,8 +36,15 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick, true);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClick, true);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -118,6 +125,8 @@ export function DateTimePicker({ value, onChange, min }: DateTimePickerProps) {
         <div
           ref={panelRef}
           style={{ top: pos.top, left: pos.left }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
           className="fixed z-[9999] w-72 rounded-md border border-cyber-border bg-cyber-bg shadow-2xl"
         >
           <div className="flex items-center justify-between px-3 py-2 border-b border-cyber-border">

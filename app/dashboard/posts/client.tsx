@@ -42,25 +42,14 @@ export function PostsClient({ posts }: PostsClientProps) {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [scheduleAt, setScheduleAt] = useState("");
   const [saving, setSaving] = useState(false);
-  const [postingId, setPostingId] = useState<string | null>(null);
-  const [postingPlatform, setPostingPlatform] = useState("");
 
   const triggerPost = async (id: string, platforms: string[]) => {
-    setPostingId(id);
-    setPostingPlatform("generating content...");
     const res = await fetch("/api/post-now", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ postId: id }),
     });
     if (res.ok) router.refresh();
-    setTimeout(() => { setPostingId(null); setPostingPlatform(""); }, 2000);
-  };
-
-  const handlePostNow = async (id: string) => {
-    const post = posts.find((p) => p.id === id);
-    if (!post) return;
-    await triggerPost(id, post.platforms);
   };
 
   const handleDelete = async (id: string) => {
@@ -108,10 +97,7 @@ export function PostsClient({ posts }: PostsClientProps) {
 
       <PostsTable
         posts={posts}
-        onPostNow={handlePostNow}
         onDelete={handleDelete}
-        postingId={postingId}
-        postingPlatform={postingPlatform}
       />
 
       <Dialog open={showNew} onOpenChange={setShowNew}>

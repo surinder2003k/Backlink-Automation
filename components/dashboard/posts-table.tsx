@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,7 @@ import {
   FileText,
   Search,
   ExternalLink,
-  Send,
   Trash2,
-  Loader2,
 } from "lucide-react";
 
 interface Post {
@@ -43,24 +41,14 @@ interface Post {
 
 interface PostsTableProps {
   posts: Post[];
-  onPostNow: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  postingId?: string | null;
-  postingPlatform?: string;
 }
 
-export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPostingId, postingPlatform }: PostsTableProps) {
+export function PostsTable({ posts, onDelete }: PostsTableProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [internalPostingId, setInternalPostingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-
-  const postingId = externalPostingId || internalPostingId;
-
-  useEffect(() => {
-    if (postingId) setSelectedPost(null);
-  }, [postingId]);
 
   const filtered = posts.filter((post) => {
     const matchSearch =
@@ -70,12 +58,6 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
       statusFilter === "all" || post.status === statusFilter;
     return matchSearch && matchStatus;
   });
-
-  const handlePostNow = async (id: string) => {
-    setInternalPostingId(id);
-    await onPostNow(id);
-    setInternalPostingId(null);
-  };
 
   const platformColors: Record<string, string> = {
     devto: "text-purple-400",
@@ -143,12 +125,11 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
                 </thead>
                 <tbody>
                   {filtered.map((post) => {
-                    const isPosting = postingId === post.id;
                     return (
                       <tr
                         key={post.id}
-                        onClick={() => !isPosting && setSelectedPost(post)}
-                        className={`border-b border-cyber-border/50 transition-colors ${isPosting ? "bg-cyber-cyan/5" : "hover:bg-cyber-card-hover/50 cursor-pointer"}`}
+                        onClick={() => setSelectedPost(post)}
+                        className="border-b border-cyber-border/50 transition-colors hover:bg-cyber-card-hover/50 cursor-pointer"
                       >
                         <td className="py-3 pr-4">
                           <div className="min-w-0 max-w-[250px]">
@@ -167,59 +148,44 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
                           </div>
                         </td>
                         <td className="py-3 pr-4">
-                          {isPosting ? (
-                            <div className="flex items-center gap-2">
-                              <Loader2 className="h-3 w-3 animate-spin text-cyber-cyan" />
-                              <span className="text-xs font-mono text-cyber-cyan">{postingPlatform || "posting..."}</span>
-                            </div>
-                          ) : (
-                            <div className="flex gap-1.5 flex-wrap">
-                              {post.platforms.map((p) => {
-                                const result = post.platform_results?.[p];
-                                const postUrl = result?.url;
-                                return postUrl ? (
-                                  <a
-                                    key={p}
-                                    href={postUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`font-mono text-[10px] uppercase ${platformColors[p] || "text-cyber-text-muted"} hover:underline`}
-                                    title={postUrl}
-                                  >
-                                    {p} ↗
-                                  </a>
-                                ) : (
-                                  <span
-                                    key={p}
-                                    className={`font-mono text-[10px] uppercase ${platformColors[p] || "text-cyber-text-muted"}`}
-                                  >
-                                    {p}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          )}
+                          <div className="flex gap-1.5 flex-wrap">
+                            {post.platforms.map((p) => {
+                              const result = post.platform_results?.[p];
+                              const postUrl = result?.url;
+                              return postUrl ? (
+                                <a
+                                  key={p}
+                                  href={postUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`font-mono text-[10px] uppercase ${platformColors[p] || "text-cyber-text-muted"} hover:underline`}
+                                  title={postUrl}
+                                >
+                                  {p} ↗
+                                </a>
+                              ) : (
+                                <span
+                                  key={p}
+                                  className={`font-mono text-[10px] uppercase ${platformColors[p] || "text-cyber-text-muted"}`}
+                                >
+                                  {p}
+                                </span>
+                              );
+                            })}
+                          </div>
                         </td>
                         <td className="py-3 pr-4">
-                          {isPosting ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-16 bg-cyber-border rounded-full h-1.5">
-                                <div className="bg-cyber-cyan h-1.5 rounded-full animate-pulse" style={{ width: "60%" }} />
-                              </div>
-                            </div>
-                          ) : (
-                            <Badge
-                              variant={
-                                post.status === "published"
-                                  ? "published"
-                                  : post.status === "failed"
-                                  ? "failed"
-                                  : "pending"
-                              }
-                            >
-                              {post.status}
-                            </Badge>
-                          )}
+                          <Badge
+                            variant={
+                              post.status === "published"
+                                ? "published"
+                                : post.status === "failed"
+                                ? "failed"
+                                : "pending"
+                            }
+                          >
+                            {post.status}
+                          </Badge>
                         </td>
                         <td className="py-3 pr-4">
                           <span className="font-mono text-xs text-cyber-text-muted">
@@ -228,20 +194,6 @@ export function PostsTable({ posts, onPostNow, onDelete, postingId: externalPost
                         </td>
                         <td className="py-3 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => { e.stopPropagation(); handlePostNow(post.id); }}
-                              disabled={isPosting}
-                              title="Post Now"
-                              className="text-cyber-cyan hover:text-cyber-cyan"
-                            >
-                              {isPosting ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Send className="h-3.5 w-3.5" />
-                              )}
-                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"

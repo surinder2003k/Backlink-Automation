@@ -7,7 +7,7 @@ Cyberpunk-themed backlink automation dashboard that posts to Dev.to, Blogger, an
 - **Frontend:** Next.js 15, Tailwind CSS, Radix UI
 - **Database:** Supabase (PostgreSQL)
 - **AI Content:** OpenRouter API (Mistral 7B free tier) with local fallback
-- **Hosting:** Netlify
+- **Hosting:** Vercel
 - **Testing:** Playwright
 
 ## Setup

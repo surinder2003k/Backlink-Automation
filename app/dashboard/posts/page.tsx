@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { PostsClient } from "./client";
+import { PostsTableClient } from "./client";
 
 export const dynamic = "force-dynamic";
 
@@ -11,5 +11,5 @@ export default async function PostsPage() {
     .select("*")
     .order("created_at", { ascending: false });
 
-  return <PostsClient posts={posts || []} />;
+  return <PostsTableClient posts={posts || []} />;
 }

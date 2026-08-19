@@ -1,7 +1,7 @@
 const SITEMAP_URLS = [
   "https://xylosai.vercel.app/sitemap.xml",
   "https://pathseekers.vercel.app/sitemap.xml",
-  "https://xeloria.vercel.app/sitemap.xml",
+  "https://surinder-web-dev.vercel.app/sitemap.xml",
 ];
 
 let cachedUrls: string[] = [];

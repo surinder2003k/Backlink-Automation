@@ -28,6 +28,8 @@ import {
   Send,
   Trash2,
   Loader2,
+  Plus,
+  Zap,
 } from "lucide-react";
 
 interface Post {
@@ -40,6 +42,7 @@ interface Post {
   created_at: string;
   scheduled_at: string | null;
   published_at: string | null;
+  source_type: string;
 }
 
 interface ScheduleClientProps {
@@ -60,7 +63,17 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [page, setPage] = useState(1);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const PER_PAGE = 10;
+
+  const [newPost, setNewPost] = useState({
+    title: "",
+    url: "",
+    excerpt: "",
+    platforms: ["devto", "blogger", "tumblr"] as string[],
+    scheduled_at: "",
+  });
+  const [creating, setCreating] = useState(false);
 
   const scheduledPosts = posts.filter((p) => p.scheduled_at);
 
@@ -68,8 +81,7 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
     const matchSearch =
       post.title.toLowerCase().includes(search.toLowerCase()) ||
       post.url.toLowerCase().includes(search.toLowerCase());
-    const matchStatus =
-      statusFilter === "all" || post.status === statusFilter;
+    const matchStatus = statusFilter === "all" || post.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
@@ -119,17 +131,61 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
     window.location.reload();
   };
 
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    
+    const insertData: any = {
+      title: newPost.title,
+      url: newPost.url,
+      excerpt: newPost.excerpt,
+      platforms: newPost.platforms,
+    };
+    if (newPost.scheduled_at) {
+      insertData.scheduled_at = newPost.scheduled_at;
+      insertData.status = "pending";
+    }
+
+    const res = await fetch("/api/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(insertData),
+    });
+
+    if (res.ok) {
+      setShowCreateDialog(false);
+      setNewPost({ title: "", url: "", excerpt: "", platforms: ["devto", "blogger", "tumblr"], scheduled_at: "" });
+      router.refresh();
+    }
+    setCreating(false);
+  };
+
+  const togglePlatform = (platform: string) => {
+    setNewPost((prev) => ({
+      ...prev,
+      platforms: prev.platforms.includes(platform)
+        ? prev.platforms.filter((p) => p !== platform)
+        : [...prev.platforms, platform],
+    }));
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-heading font-bold text-cyber-text">Schedule</h2>
-        <p className="text-sm text-cyber-text-muted mt-1">
-          Posts scheduled for future publishing ({scheduledPosts.length} total)
-          {processing && <span className="ml-2 text-cyber-cyan animate-pulse">Processing overdue posts...</span>}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-heading font-bold text-cyber-text">Schedule</h2>
+          <p className="text-sm text-cyber-text-muted mt-1">
+            Posts scheduled for future publishing ({scheduledPosts.length} total)
+            {processing && <span className="ml-2 text-cyber-cyan animate-pulse">Processing overdue posts...</span>}
+          </p>
+        </div>
+        <Button onClick={() => setShowCreateDialog(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Schedule Post
+        </Button>
       </div>
 
-      <Card>
+      <Card className="glass-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <CalendarClock className="h-4 w-4 text-cyber-cyan" />
@@ -146,7 +202,7 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
               />
             </div>
             <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); resetPage(); }}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-full sm:w-[140px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -171,6 +227,7 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
                 <thead>
                   <tr className="border-b border-cyber-border">
                     <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">Title</th>
+                    <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">Source</th>
                     <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">Platforms</th>
                     <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">Status</th>
                     <th className="text-left font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider pb-3 pr-4">Scheduled For</th>
@@ -188,19 +245,32 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
                         className="border-b border-cyber-border/50 hover:bg-cyber-card-hover/50 transition-colors cursor-pointer"
                       >
                         <td className="py-3 pr-4">
-                          <div className="min-w-0 max-w-[250px]">
-                            <p className="text-sm text-cyber-text truncate">{post.title}</p>
-                            <a
-                              href={post.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-xs text-cyber-text-muted hover:text-cyber-cyan mt-0.5"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                              {post.url.replace(/^https?:\/\//, "").slice(0, 30)}
-                            </a>
+                          <div className="min-w-0 max-w-[250px] flex items-center gap-2">
+                                                      {post.source_type === "automated" && (
+                                                        <Zap className="h-4 w-4 text-cyber-orange flex-shrink-0" aria-label="Automated" />
+                                                      )}
+                            <div className="min-w-0">
+                              <p className="text-sm text-cyber-text truncate">{post.title}</p>
+                              <a
+                                href={post.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs text-cyber-text-muted hover:text-cyber-cyan mt-0.5"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                {post.url.replace(/^https?:\/\//, "").slice(0, 30)}
+                              </a>
+                            </div>
                           </div>
                         </td>
+                        <td className="py-3 pr-4">
+                                                  <Badge
+                                                    variant={post.source_type === "automated" ? "published" : "default"}
+                                                    className="text-xs font-mono"
+                                                  >
+                                                    {post.source_type === "automated" ? "AUTO" : "MANUAL"}
+                                                  </Badge>
+                                                </td>
                         <td className="py-3 pr-4">
                           <div className="flex gap-1.5 flex-wrap">
                             {post.platforms.map((p) => (
@@ -274,6 +344,7 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
         </CardContent>
       </Card>
 
+      {/* Delete Confirmation Dialog */}
       <Dialog open={!!confirmDelete} onOpenChange={() => setConfirmDelete(null)}>
         <DialogContent>
           <DialogHeader>
@@ -287,6 +358,7 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
         </DialogContent>
       </Dialog>
 
+      {/* Post Details Dialog */}
       <Dialog open={!!selectedPost} onOpenChange={() => setSelectedPost(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -300,6 +372,12 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
                 <a href={selectedPost.url} target="_blank" rel="noopener noreferrer" className="text-sm text-cyber-cyan hover:underline break-all">
                   {selectedPost.url}
                 </a>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider mb-1">Source Type</p>
+                <Badge variant={selectedPost.source_type === "automated" ? "published" : "default"}>
+                  {selectedPost.source_type.toUpperCase()}
+                </Badge>
               </div>
               <div>
                 <p className="font-mono text-[10px] text-cyber-text-muted uppercase tracking-wider mb-1">Scheduled For</p>
@@ -331,6 +409,75 @@ export function ScheduleClient({ posts }: ScheduleClientProps) {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Post Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={() => setShowCreateDialog(false)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Schedule New Post</DialogTitle>
+            <DialogDescription>Enter the details for your backlink post</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreatePost} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-mono text-cyber-text-muted">Title</label>
+              <Input
+                value={newPost.title}
+                onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                placeholder="Enter post title"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-mono text-cyber-text-muted">Source URL</label>
+              <Input
+                value={newPost.url}
+                onChange={(e) => setNewPost({ ...newPost, url: e.target.value })}
+                placeholder="https://yourblog.com/post-url"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-mono text-cyber-text-muted">Excerpt (optional)</label>
+              <Input
+                value={newPost.excerpt}
+                onChange={(e) => setNewPost({ ...newPost, excerpt: e.target.value })}
+                placeholder="Brief description..."
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-mono text-cyber-text-muted">Platforms</label>
+              <div className="flex gap-4 flex-wrap">
+                {["devto", "blogger", "tumblr"].map((platform) => (
+                  <label key={platform} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newPost.platforms.includes(platform)}
+                      onChange={() => togglePlatform(platform)}
+                      className="w-4 h-4 text-cyber-cyan border-cyber-border rounded focus:ring-cyber-cyan"
+                    />
+                    <span className="text-sm text-cyber-text capitalize">{platform}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-mono text-cyber-text-muted">Schedule For (optional)</label>
+              <Input
+                type="datetime-local"
+                value={newPost.scheduled_at}
+                onChange={(e) => setNewPost({ ...newPost, scheduled_at: e.target.value })}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="secondary" type="button" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
+              <Button type="submit" disabled={creating}>
+                {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                {newPost.scheduled_at ? "Schedule" : "Post Now"}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

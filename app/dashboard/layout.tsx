@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { DashboardProviders } from "@/components/layout/dashboard-providers";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { TopProgress } from "@/components/top-progress";
@@ -17,16 +18,18 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-cyber-bg">
-      <TopProgress />
-      <Sidebar />
-      <Header />
-      <main
-        className="min-h-screen pt-16"
-        style={{ marginLeft: "256px" }}
-      >
-        <div className="p-8">{children}</div>
-      </main>
-    </div>
+    <DashboardProviders>
+      <div className="min-h-screen bg-cyber-bg grid-bg">
+        <TopProgress />
+        <Sidebar />
+        <Header />
+        <main
+          className="min-h-screen pt-16 lg:pl-64"
+          style={{ marginLeft: "0" }}
+        >
+          <div className="p-4 lg:p-8 animate-fade-in-up">{children}</div>
+        </main>
+      </div>
+    </DashboardProviders>
   );
 }

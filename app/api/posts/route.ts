@@ -16,14 +16,20 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const body = await req.json();
-  const { title, url, excerpt, platforms, scheduled_at } = body;
+  const { title, url, excerpt, platforms, scheduled_at, source_type, automation_batch_id } = body;
 
   const insertData: any = {
     title,
     url,
     excerpt,
     platforms,
+    source_type: source_type || "manual",
   };
+  
+  if (automation_batch_id) {
+    insertData.automation_batch_id = automation_batch_id;
+  }
+  
   if (scheduled_at) {
     insertData.scheduled_at = scheduled_at;
     insertData.status = "pending";

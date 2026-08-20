@@ -23,6 +23,9 @@ See `.env.example` for the full list. Key variables:
 
 | Variable | Description |
 |----------|-------------|
+| `XYLOS_AUTH_USERNAME` | Server-side dashboard username |
+| `XYLOS_AUTH_PASSWORD` | Server-side dashboard password |
+| `XYLOS_AUTH_SECRET` | Long random secret used to sign the HttpOnly session cookie |
 | `XYLOS_SUPABASE_URL` | Supabase project URL |
 | `XYLOS_SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
 | `DEVTO_API_KEY` | Dev.to API key |
@@ -92,7 +95,8 @@ npm run dev          # Start dev server
 npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
-npm run test         # Run Playwright tests
+npm run test         # Run local Playwright tests (remote live-site tests are opt-in)
+npm run test:property # Run property-based authentication tests
 npm run test:ui      # Run tests with UI
 npm run test:headed  # Run tests headed
 ```
@@ -107,7 +111,7 @@ Playwright tests cover:
 - Responsive design (mobile, tablet, desktop)
 - API endpoints
 
-Run tests: `npm run test`
+Run tests: `npm run test`. The legacy remote deployment suite is intentionally ignored unless `RUN_LIVE_SITE=1` is set, because it performs mutating actions against a real site.
 
 ## Project Structure
 

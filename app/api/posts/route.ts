@@ -1,9 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireApiAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const unauthorized = await requireApiAuth();
+  if (unauthorized) return unauthorized;
   const supabase = await createClient();
   const { data } = await supabase
     .from("posts")
@@ -14,6 +17,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireApiAuth();
+  if (unauthorized) return unauthorized;
   const supabase = await createClient();
   const body = await req.json();
   const { title, url, excerpt, platforms, scheduled_at, source_type, automation_batch_id } = body;
@@ -46,6 +51,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const unauthorized = await requireApiAuth();
+  if (unauthorized) return unauthorized;
   const supabase = await createClient();
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

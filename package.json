@@ -6,8 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "playwright test",
+    "test:property": "tsx --test tests/auth.property.test.ts",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed"
   },
@@ -41,8 +42,10 @@
     "autoprefixer": "^10.5.4",
     "eslint": "^9.21.0",
     "eslint-config-next": "^15.2.4",
+    "fast-check": "^4.9.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.12",
     "typescript": "^5.7.3"
   }
 }

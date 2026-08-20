@@ -1,9 +1,13 @@
 import { generateArticleContent } from "@/lib/platforms/ai-content";
+import { requireApiAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireApiAuth();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await req.json();
     const { title, url, excerpt } = body;

@@ -7,9 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExternalLink, Loader2, Eye, EyeOff, Lock, User as UserIcon } from "lucide-react";
 
-const VALID_USERNAME = "sunny";
-const VALID_PASSWORD = "3424";
-
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -23,14 +20,25 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
-      document.cookie = "xylos_auth=authenticated; path=/; max-age=86400";
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.error || "Unable to sign in");
+      }
+
       router.push("/dashboard");
       router.refresh();
-    } else {
-      setError("Invalid username or password");
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Unable to sign in");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -121,19 +129,10 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        {/* Demo credentials hint */}
         <div className="mt-6 p-4 rounded-lg bg-cyber-card border border-cyber-border/50 animate-fade-in-up delay-300">
-          <p className="text-xs text-cyber-text-muted text-center mb-2">Demo Credentials</p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="flex items-center justify-center gap-1 p-2 rounded bg-cyber-bg font-mono">
-              <UserIcon className="h-3 w-3 text-cyber-text-muted" />
-              <span>sunny</span>
-            </div>
-            <div className="flex items-center justify-center gap-1 p-2 rounded bg-cyber-bg font-mono">
-              <Lock className="h-3 w-3 text-cyber-text-muted" />
-              <span>3424</span>
-            </div>
-          </div>
+          <p className="text-xs text-cyber-text-muted text-center">
+            Credentials are configured securely on the server.
+          </p>
         </div>
 
         <p className="text-center text-xs text-cyber-text-muted mt-6 animate-fade-in-up delay-400">

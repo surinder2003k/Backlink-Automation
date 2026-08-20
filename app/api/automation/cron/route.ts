@@ -111,8 +111,6 @@ export async function GET(req: NextRequest) {
     
     // Try next sitemap in rotation
     let nextIndex = (currentIndex + 1) % sitemapUrls.length;
-    let foundUrls = false;
-    
     for (let i = 0; i < sitemapUrls.length; i++) {
       const tryUrl = sitemapUrls[nextIndex];
       const urls = await getUnusedUrlsFromSitemap(supabase, tryUrl, maxPosts);

@@ -1,5 +1,5 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { isAuthenticated } from "@/lib/auth";
 import { DashboardProviders } from "@/components/layout/dashboard-providers";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -10,10 +10,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const auth = cookieStore.get("xylos_auth");
-
-  if (!auth || auth.value !== "authenticated") {
+  if (!(await isAuthenticated())) {
     redirect("/login");
   }
 

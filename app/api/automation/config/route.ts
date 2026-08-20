@@ -1,9 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireApiAuth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const unauthorized = await requireApiAuth();
+  if (unauthorized) return unauthorized;
   const supabase = await createClient();
   const { data } = await supabase.from("automation_config").select("*").limit(1).single();
   return NextResponse.json(data || {
@@ -21,6 +24,8 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  const unauthorized = await requireApiAuth();
+  if (unauthorized) return unauthorized;
   const supabase = await createClient();
   const body = await req.json();
 
@@ -38,6 +43,8 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireApiAuth();
+  if (unauthorized) return unauthorized;
   const supabase = await createClient();
   const body = await req.json();
   const { action } = body;

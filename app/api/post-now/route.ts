@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requireApiAuth } from "@/lib/auth";
 import { postToDevTo } from "@/lib/platforms/devto";
 import { postToTumblr } from "@/lib/platforms/tumblr";
 import { postToBlogger } from "@/lib/platforms/blogger";
@@ -8,6 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const unauthorized = await requireApiAuth();
+  if (unauthorized) return unauthorized;
   const supabase = await createClient();
   const body = await req.json();
   const { postId } = body;

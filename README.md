@@ -40,7 +40,7 @@ See `.env.example` for the full list. Key variables:
 - AI-generated 500+ word articles with backlinks
 - Schedule posts with calendar picker
 - Inline posting progress in table rows
-- **Automation:** Runs every 6 hours, rotating through 3 sitemaps
+- **Automation:** Runs on the configured cron interval, rotating through 3 sitemaps
 - **URL Tracking:** Prevents duplicate backlinks to the same URL
 - **Blog Verification:** Verifies blogs are actually created on platforms
 - **Sitemap Rotation:** Cycles through XylosAI, Pathseekers, Surinder Web Dev
@@ -65,14 +65,14 @@ The automation system:
 
 ### Cron Setup
 
-For production, set up a cron job to hit `/api/automation/cron` every 6 hours:
+For Vercel Hobby deployments, the included cron runs once per day because Hobby projects do not allow multiple cron executions per day. To run every 6 hours, use Vercel Pro or an external scheduler that sends the `CRON_SECRET` header:
 
 ```bash
 # Vercel Cron (vercel.json)
 {
   "crons": [{
     "path": "/api/automation/cron",
-    "schedule": "0 */6 * * *"
+    "schedule": "0 0 * * *"
   }]
 }
 ```
